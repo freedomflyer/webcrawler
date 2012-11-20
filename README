@@ -1,1 +1,4 @@
->Testing
+> By Spencer Gardner
+  > A webcrawler that crawls based off of a given url to the links that are on that URL, and thereafter recurisvely crawls the links that follow.
+  > Uses custom datastructures to store and count unique words found on each page.
+  > Be careful which URL is specified!
