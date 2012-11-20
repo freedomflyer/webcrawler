@@ -1,0 +1,191 @@
+#include "StringURLResolver.h"
+
+namespace std
+{
+
+	StringURLResolver::StringURLResolver()
+	{
+	}
+
+	string GeneratePrefix(string _url)
+	{
+		if(boost::algorithm::starts_with(_url, "http://"))
+		{
+			  LinkedList<string> tokenList;
+			  string str = _url;
+			  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+			  boost::char_separator<char> sep("/");
+			  tokenizer tokens(str, sep);
+
+			  for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
+			  {
+				  string stringToAdd = *tok_iter;
+				  tokenList.Insert(stringToAdd, NULL);
+			  }
+			  return "http://" + tokenList.Get(tokenList.GetSize()-2) + "/";
+		}
+		else if(boost::algorithm::starts_with(_url, "file:///"))
+		{
+			return "file:///";
+		}
+		else
+		{
+			//cout << "GeneratePrefix Error!" << endl;
+			return NULL;
+		}
+	}
+
+	void tokenizeString(string _fragment, LinkedList<string> & _tokenList)
+	{
+		string str = _fragment;
+		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+		boost::char_separator<char> sep("/");
+		tokenizer tokens(str, sep);
+
+		//Count the number of directories to swipe off, and populate the linked list with tokens
+		for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
+		{
+			string stringToAdd = *tok_iter;
+			_tokenList.Insert(stringToAdd, NULL);
+		}
+	}
+
+
+	//If the things start with dots, take care of them.
+	string calculateDotFragment(string _fragment, string _relativeURL)
+	{
+		//Prep the fragment to add the relativeURL onto it.
+		int lastSlashPos = _fragment.rfind('/');
+		_fragment.erase(lastSlashPos+1,_fragment.length());
+
+		int numDoubleDots = 0;
+		LinkedList<string> tokenList;
+		string str = _relativeURL;
+		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+		boost::char_separator<char> sep("/");
+		tokenizer tokens(str, sep);
+
+		//Count the number of directories to swipe off, and populate the linked list with tokens
+		for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
+		{
+			if(*tok_iter == "..")
+				numDoubleDots++;
+			else if(*tok_iter != ".." && *tok_iter != ".")
+			{
+				string stringToAdd = *tok_iter;
+				tokenList.Insert(stringToAdd, NULL);
+			}
+		}
+
+		string returnFragment = "";
+		for(int i = (tokenList.GetSize()-1); i >= 0; i--)
+		{
+			if(i >= 1)
+				returnFragment += tokenList.Get(i) + "/";
+			else
+				returnFragment += tokenList.Get(i);
+		}
+
+		LinkedList<string> tokenHolder;
+		tokenizeString(_fragment, tokenHolder);
+		//cout << "size of base url tokenized is " << tokenHolder.GetSize() << endl;
+
+		//If there are too many directories to remove, return normal returnFrag
+		if(numDoubleDots >= tokenHolder.GetSize())
+		{
+			return returnFragment;
+		}
+		else //Or, we can just take off the right amount
+		{
+			//cout << "num double dots " << numDoubleDots << endl;
+			string baseURLFragment = "";
+			for( int j = tokenHolder.GetSize()-1; j >= numDoubleDots; j-- )
+			{
+				//cout << "adding " << tokenHolder.Get(j) << endl;
+				baseURLFragment += (tokenHolder.Get(j) + "/");
+			}
+			//cout << "here" << endl;
+
+			return baseURLFragment + returnFragment;
+		}
+	}
+
+	string calculateFragment(string _fragment, string _relativeURL)
+	{
+		if(_relativeURL[0] == '#')
+			return _fragment + _relativeURL;
+		else if(_relativeURL[0] == '/')
+			return _relativeURL.erase(0,1);
+		else if(_relativeURL[0] == '.')
+			return calculateDotFragment(_fragment, _relativeURL);
+		else //relative url starts with a letter
+		{
+			cout << "starts with a letter" << endl;
+			int lastSlashPos = _fragment.rfind('/');
+			_fragment.erase(lastSlashPos+1,_fragment.length());
+			return _fragment + _relativeURL;
+		}
+	}
+
+	URL StringURLResolver::resolveURL(URL _baseURL, URL _relativeURL)
+	{
+		string theURL = _baseURL.getURL();
+
+		string urlPrefix = GeneratePrefix(theURL);
+
+		//This is the "rest of the url" after the prefix has been taken away.
+		theURL.erase(0, urlPrefix.length());
+
+		if(theURL.find(".") < 0)
+			if(theURL[theURL.length()-1] != '/')
+				theURL += "/";
+		//cout << "the URL is " << theURL << endl;
+
+		string fragment = calculateFragment(theURL, _relativeURL.getURL());
+
+		string finishedURL = urlPrefix + fragment;
+
+		return URL(finishedURL);
+	}
+
+	bool StringURLResolver::Test(ostream &os)
+	{
+		bool success;
+		cout << "---------------TESTING StringURLResolver.cpp-----------------" << endl;
+
+		StringURLResolver resolver;
+
+		////cout << resolver.resolveURL(URL("http://www.google.com/testing/again/"), URL("././.././../index.html")) << endl;
+		////cout << resolver.resolveURL(URL("file:///testing/again/second/third/test.html"), URL("./../index2/testing.html")) << endl;
+
+		//cout << "TEST 1 " << resolver.resolveURL(URL("file:///news/financial/index.html"), URL("/images/nasdaq.jpg")) << endl;
+		TEST(resolver.resolveURL(URL("file:///news/financial/index.html"), URL("/images/nasdaq.jpg")).getURL() == "file:///images/nasdaq.jpg");
+		TEST(resolver.resolveURL(URL("http://www.cnn.com/news/financial/index.html"), URL("/images/nasdaq.jpg")).getURL() == "http://www.cnn.com/images/nasdaq.jpg");
+
+		TEST(resolver.resolveURL(URL("file:///www.cnn.com/news/financial/index.html"), URL("./images/nasdaq.jpg")).getURL() == "file:///www.cnn.com/news/financial/images/nasdaq.jpg");
+		TEST(resolver.resolveURL(URL("http://www.cnn.com/news/financial/index.html"), URL("./images/nasdaq.jpg")).getURL() == "http://www.cnn.com/news/financial/images/nasdaq.jpg");
+
+		TEST(resolver.resolveURL(URL("file:///www.cnn.com/news/financial/index.html"), URL("../images/nasdaq.jpg")).getURL() == "file:///www.cnn.com/news/images/nasdaq.jpg");
+		TEST(resolver.resolveURL(URL("http://www.cnn.com/news/financial/index.html"), URL("../images/nasdaq.jpg")).getURL() == "http://www.cnn.com/news/images/nasdaq.jpg");
+
+		//cout << "TEST 2 " << resolver.resolveURL(URL("file:///news/index.html"), URL("#HEADLINES")) << endl;
+
+		TEST(resolver.resolveURL(URL("file:///news/index.html"), URL("#HEADLINES")).getURL() == "file:///news/index.html#HEADLINES");
+		TEST(resolver.resolveURL(URL("http://www.cnn.com/news/index.html"), URL("#HEADLINES")).getURL() == "http://www.cnn.com/news/index.html#HEADLINES");
+
+		TEST(resolver.resolveURL(URL("file:///news/financial/index.html"), URL("images/nasdaq.jpg")).getURL() == "file:///news/financial/images/nasdaq.jpg");
+		TEST(resolver.resolveURL(URL("http://www.cnn.com/news/financial/index.html"), URL("images/nasdaq.jpg")).getURL() == "http://www.cnn.com/news/financial/images/nasdaq.jpg");
+
+		TEST(resolver.resolveURL(URL("http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/testFour.htm"), URL("title.html")).getURL() == "http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/title.html");
+
+
+		TEST(resolver.resolveURL(URL("http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/scale.php?sec="), URL("scale.php?sec=tortoise")).getURL() == "http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/scale.php?sec=tortoise");
+
+
+
+
+
+		return success;
+	}
+}
+/* namespace std */

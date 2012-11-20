@@ -1,0 +1,25 @@
+
+**** Build of configuration Default for project webcrawler ****
+
+make run 
+bin/crawler http://mormon.org/joseph-smith/ outputabby.xml stopwords.txt
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/javascript:void(0);/
+Network Error: Unsupported redirect location: /joseph-smith/"/
+Network Error: Unsupported redirect location: /joseph-smith/"/
+Network Error: Unsupported redirect location: /searchResults?theme=blue&query=Joseph+smith+HTTP+Customer+Feedback&redir=/joseph-smith/https://www.allegiancetech.com/CustomerFeedback/FeedbackLoop.aspx?companyId=1832636&amp;autoLocation=11488
+Network Error: Unsupported redirect location: /searchResults?theme=blue&query=Joseph+smith+HTTP+locations&redir=/joseph-smith/https://www.familysearch.org/locations
+Network Error: Unsupported redirect location: /searchResults?theme=blue&query=Joseph+smith+HTTP+learn+Ike+eon+Main+Page&redir=/joseph-smith/https://www.familysearch.org/learn/wiki/en/Main_Page
+________________WEBCRAWLER DESTRUCTOR______________
+
+**** Build Finished ****

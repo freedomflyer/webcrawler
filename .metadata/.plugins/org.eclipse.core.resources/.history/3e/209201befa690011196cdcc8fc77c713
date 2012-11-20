@@ -1,0 +1,377 @@
+#ifndef CS240_LINKED_LIST_H
+#define CS240_LINKED_LIST_H
+
+#include <string>
+#include <UnitTest.h>
+
+template <class T> class LLNode;
+template <typename T> class LinkedList;
+
+using namespace std;
+
+//! LLNode implements a doubly-linked list node
+template <typename T> class LLNode
+{
+	friend class LinkedList<T>;  //!< LinkedList can access private members of LLNode
+
+	public:
+		//!  Constructor
+		LLNode(const T & v, LLNode<T> * p, LLNode * n) : value(v), prev(p), next(n)
+		{
+
+		}
+
+		//! Copy Constructor
+		LLNode(const LLNode<T> & other) : value(other.value),prev(other.prev),next(other.next)
+		{
+
+		}
+
+		//! Assignment operator
+		LLNode<T> & operator=(const LLNode & other)
+		{
+			if(this!=&other)
+			{
+				value=other.value;
+				prev=other.prev;
+				next=other.next;
+			}
+			return *this;
+		}
+
+		//!  Read-only public methods for use by clients of the LinkedList class
+		const T & GetValue() const
+		{
+		  return value;
+		}
+
+		T & GetValueNonConst()
+		{
+			return value;
+		}
+
+		//Return the previous node relative to this node
+		LLNode<T> * GetPrevious() const
+		{
+			return prev;
+		}
+
+		//Return the next node relative to this node
+		LLNode<T> * GetNext() const
+		{
+			return next;
+		}
+
+	private:
+		T value;        //!< value stored in the node
+		LLNode<T> * prev;            //!< pointer to previous node in the list
+		LLNode<T> * next;            //!< pointer to next node in the list
+};
+
+
+//! LinkedList implements a doubly-linked list
+template <typename T> class LinkedList
+{
+	public:
+		//!  No-arg constructor.  Initializes an empty linked list
+		LinkedList()
+		{
+			first = NULL;
+			size = 0;
+		}
+
+		//!  Copy constructor.  Makes a complete copy of its argument
+		LinkedList(const LinkedList<T> & other)
+		{
+			if(other.size > 0)
+			{
+				LLNode<T> node_to_work_with = other.GetLast();
+
+				size = 0;
+				for(int i=0; i<other.size; i++)
+				{
+					Insert(node_to_work_with->GetValue(), NULL);
+					node_to_work_with = node_to_work_with->GetPrevious();
+				}
+			}
+			else
+			{
+				first = NULL;
+				size = 0;
+			}
+		}
+
+		//!  Destructor
+		~LinkedList()
+		{
+			LLNode<T> * temp_node = first;
+			while(temp_node != NULL)
+			{
+				LLNode<T> * second_temp_node = temp_node->next;
+				delete temp_node;
+				temp_node = second_temp_node;
+			}
+		}
+
+		T Get(int _index)
+		{
+			if(_index > size)
+				return NULL;
+			else if(size == 0)
+				return NULL;
+			else
+			{
+				LLNode<T> * tempNode = first;
+				for(int i=0; i<_index; i++)
+					tempNode = tempNode->next;
+				return tempNode->GetValue();
+			}
+		}
+
+		//! Assignment operator.  Makes a complete copy of its argument
+		//! @return A reference to oneself
+		LinkedList<T> & operator =(const LinkedList<T> & other);
+
+		//!  @return true if the list is empty, or false if the list is not empty
+		bool IsEmpty() const
+		{
+			if(size==0)
+				return true;
+			return false;
+		}
+
+
+		//!  Removes all values from the list
+		void Clear()
+		{
+			if(size==0)
+				return;
+			LLNode<T> * temp = first;
+			LLNode<T> * current = first;
+
+			while(temp->next != NULL)
+			{
+				current = temp->next;
+				delete temp;
+				temp = current;
+			}
+			delete temp;
+
+			first = NULL;
+			size = 0;
+		}
+
+
+		//!  @return the number of values in the list
+		int GetSize() const
+		{
+			return size;
+		}
+
+
+		//!  @return a pointer to the first node in the list, or NULL if the list is empty
+		LLNode<T> * GetFirst() const
+		{
+			if(size==0)
+				return NULL;
+			else
+				return first;
+		}
+
+
+		//!  @returns a pointer to the last node in the list, or NULL if the list is empty
+		LLNode<T> * GetLast() const
+		{
+			if(size==0)
+				return NULL;
+
+			LLNode<T> * temp = first;
+			for(int i=0; i<size-1; i++)
+			{
+				temp = temp->GetNext();
+			}
+
+			return temp;
+		}
+
+		LLNode<T> * RemoveLast() const
+		{
+			if(size==0)
+				return NULL;
+
+			LLNode<T> * temp = first;
+			for(int i=0; i<size-1; i++)
+			{
+				temp = temp->GetNext();
+			}
+
+			return temp;
+		}
+
+
+		//!  Inserts value v into the list after node n
+		//!
+		//!  @param v The new value being inserted
+		//!  @param n A node that is already in the list after which the new node should
+		//!      be inserted.
+		//!      If n is NULL, the new node should be inserted at the beginning of the list.
+		//!
+		//!  @return a pointer to the newly inserted node
+		LLNode<T> * Insert(const T & v, LLNode<T> * n)
+		{
+			if(size == 0)
+			{
+				first = new LLNode<T>(v, NULL, NULL);
+				size++;
+				return first;
+			}
+			else
+			{
+				if(n == NULL)
+				{
+					LLNode<T> * new_node = new LLNode<T>(v, NULL, first);
+					first -> prev = new_node;
+					first = new_node;
+					size++;
+					return first;
+				}
+				else //insert node after node n
+				{
+					if(n == GetLast())
+					{
+						LLNode<T> * new_node = new LLNode<T>(v, n, NULL);
+						n -> next = new_node;
+						size++;
+						return new_node;
+					}
+					else
+					{
+						LLNode<T> * new_node = new LLNode<T>(v, n, n->GetNext());
+						n->next->prev = new_node;
+						n->next = new_node;
+						size++;
+						return new_node;
+					}
+				}
+			}
+		}
+
+		//! Searches for the first occurrence of value v that appears in the list
+		//!   after node n
+		//!
+		//!  @param v The value being searched for
+		//!  @param n The node in the list after which the search should begin.
+		//!      If n is NULL, the list should be searched from the beginning.
+		//!
+		//!  @return a pointer to the node containing v, or NULL if v is not found
+		LLNode<T> * Find(const T & v, LLNode<T> * n) const
+		{
+			LLNode<T> * curr_node;
+			if(n == NULL)
+				curr_node = first;
+			else
+				curr_node = n->GetNext();
+
+			while(curr_node != NULL)
+			{
+				if(curr_node -> GetValue() == v)
+					return curr_node;
+				curr_node = curr_node->GetNext();
+			}
+
+			return NULL;
+		}
+
+		//!  Removes node n from the list
+		//!
+		//!  @param n The node being removed from the list
+		void Remove(LLNode<T> * n)
+		{
+			if(first == GetLast())
+			{
+				first = NULL;
+				size--;
+				delete n;
+				return;
+			}
+
+			if(n == NULL || size == 0)
+			{
+				return;
+			}
+
+			if(n == first)
+			{
+				LLNode<T> * next_node = n -> GetNext();
+				first = next_node;
+				first->prev = NULL;
+			}
+			else if(n == GetLast())
+			{
+				LLNode<T> * prev_node = n -> GetPrevious();
+				prev_node->next = NULL;
+			}
+			else
+			{
+				LLNode<T> * prev_node = n->GetPrevious();
+				LLNode<T> * next_node = n->GetNext();
+
+				prev_node->next = next_node;
+				next_node->prev = prev_node;
+			}
+			delete n;
+			size--;
+		}
+
+		static bool Test(ostream & os)
+		{
+			bool success = true;
+
+			cout << "---------TESTING LinkedList.h------------" << endl;
+
+			LinkedList<string> testList;
+
+			TEST(testList.GetSize() == 0);
+
+			testList.Insert("the", NULL);
+			testList.Insert("quick", NULL);
+			testList.Insert("brown", NULL);
+			testList.Insert("fox", NULL);
+
+			TEST(testList.GetSize() == 4);
+
+			TEST(testList.Get(0) == "fox");
+			TEST(testList.Get(1) == "brown");
+			TEST(testList.Get(2) == "quick");
+			TEST(testList.Get(3) == "the");
+
+			TEST(testList.Find("the", NULL) != NULL);
+			TEST(testList.Find("quick", NULL) != NULL);
+			TEST(testList.Find("brown", NULL) != NULL);
+			TEST(testList.Find("fox", NULL) != NULL);
+
+			LLNode<string> * find1 = testList.Find("the", NULL);
+			LLNode<string> * find2 = testList.Find("quick", NULL);
+			LLNode<string> * find3 = testList.Find("brown", NULL);
+			LLNode<string> * find4 = testList.Find("fox", NULL);
+
+			testList.Remove(find1);
+			TEST(testList.GetSize() == 3);
+			testList.Remove(find2);
+			TEST(testList.GetSize() == 2);
+			testList.Remove(find3);
+			TEST(testList.GetSize() == 1);
+			testList.Remove(find4);
+			TEST(testList.GetSize() == 0);
+
+			return success;
+		}
+
+	private:
+		int size;
+		LLNode<T> * first;
+};
+
+
+#endif /* CS240_LINKED_LIST_H */
+

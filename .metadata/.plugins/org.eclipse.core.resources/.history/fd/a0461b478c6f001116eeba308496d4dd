@@ -1,0 +1,46 @@
+#include <iostream>
+#include <string>
+#include "BST.h"
+#include "StopWords.h"
+#include "HTMLParser.h"
+#include "Occurence.h"
+#include "URLQueue.h"
+#include "StopWords.h"
+#include "URL.h"
+#include "Word.h"
+#include "WordList.h"
+#include "XMLGenerator.h"
+#include "StringURLResolver.h"
+#include "LinkedList.h"
+#include "WebCrawler.h"
+
+using namespace std;
+
+//This is a driver for testing the WebCrawler.
+int main(int argc, char *argv[])
+{
+	bool success = true;
+
+	//success = BST<Word>::Test(cout) && success;
+	//success = LinkedList<string>::Test(cout) && success;
+	//success = StringURLResolver::Test(cout) && success;
+	//success = StopWords::Test(cout) && success;
+	//success = HTMLParser::Test(cout) && success;
+	//success = URLQueue::Test(cout) && success;
+
+	cout << "*********RUNNING WEBCRAWLER TEST*********" << endl;
+
+	string url1("http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/fine.html");
+//	string url2("http://lightplanet.com/mormons/people/joseph_smith/visions.html");
+//	string url3("file:///users/home2/ugrad/f/freefly/Computer "
+	//		"Science Projects/cs240/webcrawler_retry/file/student/index.html");
+
+//	WebCrawler Crawler(url1);
+//	WebCrawler Crawler(url3);
+
+//	Crawler.crawl();
+//	Crawler.printOutput("output.xml", "stopwords2.txt");
+
+	return 0;
+}
+

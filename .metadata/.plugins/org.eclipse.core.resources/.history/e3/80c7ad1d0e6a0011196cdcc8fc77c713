@@ -1,0 +1,323 @@
+#ifndef CS240_BST_H
+#define CS240_BST_H
+
+#include <string>
+#include <ostream>
+#include <iostream>
+#include "UnitTest.h"
+#include "LinkedList.h"
+
+template <typename T> class BSTNode;
+template <class T> class BST;
+
+using namespace std;
+
+//!  BSTNode implements a binary search tree node
+template <typename T> class BSTNode
+{
+	friend class BST<T>;   //!< BST can access private members of BSTNode
+
+	public:
+
+		//!  Constructor
+		BSTNode(T * v) : value(v), left(NULL), right(NULL)
+		{
+		}
+
+		//!Destructor
+		~BSTNode()
+		{
+			cout << "________________BST NODE DESTRUCTOR______________" << endl;
+			//delete value;
+			delete left;
+			delete right;
+		}
+
+		//!  Read-only public methods for use by clients of the BST class
+		T * GetValue() const
+		{
+			return value;
+		}
+
+		BSTNode<T> * GetLeft() const
+		{
+			return left;
+		}
+
+		BSTNode<T> * GetRight() const
+		{
+		  return right;
+		}
+
+		//! Assignment operator
+		BSTNode<T> & operator=(const BSTNode<T> & other)
+		{
+			if(this != &other)
+			{
+				value=other.value;
+				left=other.left;
+				right=other.right;
+			}
+			return *this;
+		}
+
+	private:
+		T * value;  //!< value stored in the node
+		BSTNode<T> * left;     //!< pointer to the node's left child
+		BSTNode<T> * right;    //!< pointer to the node's right child
+};
+
+
+//!  BST implements a binary search tree
+template <typename T> class BST
+{
+
+	public:
+		//!  No-arg constructor.  Initializes an empty BST
+		BST():root(NULL), size(0)
+		{
+		}
+
+		//!  Destructor
+		~BST()
+		{
+			cout << "________________BST DESTRUCTOR______________" << endl;
+			Clear();
+		}
+
+		//!  Assignment operator.  Makes a complete copy of its argument
+		//!  @return Reference to oneself
+		BST<T> & operator =(const BST<T> & other)
+		{
+			if(this != &other)
+			{
+				Clear();
+				root = CopyRecursive(other.root);
+				size = other.size;
+			}
+
+			return *this;
+		}
+
+		//!  @return a pointer to the root node of the tree, or NULL if the tree is empty.
+		//!  @note This is useful for BST clients that need to traverse the tree.)
+		BSTNode<T> * GetRoot()const
+		{
+			if(size == 0)
+				return NULL;
+			return root;
+		}
+
+
+		//!  @return true if the BST is empty, or false if the BST is not empty
+		bool IsEmpty() const
+		{
+			if(size == 0)
+				return true;
+			return false;
+		}
+
+
+		//!  Removes all values from the BST
+		void Clear()
+		{
+			delete root;
+			root = NULL;
+			size = 0;
+		}
+
+
+		//!  @return the number of values in the BST
+		int GetSize() const
+		{
+			if(size >= 0)
+				return size;
+			else
+				return -1;
+		}
+
+
+		//!  Inserts value v into the BST
+		//!
+		//!  @param v The new value being inserted
+		//!
+		//!  @return a pointer to the newly inserted node, or NULL if v was already
+		//!          in the tree (i.e., NULL is used to indicate a duplicate insertion)
+		BSTNode<T> * Insert(T & v)
+		{
+			if(size == 0)
+			{
+				size++;
+				return root = new BSTNode<T>(&v);
+			}
+			else
+				return InsertRecursive(v, root);
+		}
+
+		//!  Searches the tree for value v
+		//!
+		//!  @param v The new value being searched for
+		//!
+		//!  @return a pointer to the node containing v, or NULL if v is not in the tree
+		BSTNode<T> * Find(T & v)
+		{
+			if(size == 0)
+				return NULL;
+			else
+				return FindRecursive(v, root);
+		}
+
+
+		BSTNode<T> * FindRecursive(T & valueToFind, BSTNode<T> * node_to_check)
+		{
+			if(valueToFind < *node_to_check->GetValue())
+			{
+				if(node_to_check->left == NULL)
+					return NULL;
+				return FindRecursive(valueToFind, node_to_check->left);
+			}
+			else if(valueToFind > *node_to_check->GetValue())
+			{
+				if(node_to_check->right == NULL)
+					return NULL;
+				return FindRecursive(valueToFind, node_to_check->right);
+			}
+			else if(valueToFind == *node_to_check->GetValue())
+				return node_to_check;
+		}
+
+		LinkedList<T> * GetList()
+		{
+			LinkedList<T> * valueList = new LinkedList<T>();
+
+			if(root != NULL)
+				GetRecursive(valueList, root);
+			else
+				return NULL;
+
+			return valueList;
+		}
+
+		void GetRecursive(LinkedList<T> * _valueList, BSTNode<T> * node)
+		{
+			if(node->left != NULL)
+				GetRecursive(_valueList, node->left);
+			if(node->right != NULL)
+				GetRecursive(_valueList, node->right);
+			_valueList->Insert(*node->GetValue(), NULL);
+		}
+
+		static bool Test(ostream & os)
+		{
+			bool success = true;
+
+			cout << "---------TESTING BST------------" << endl;
+
+			BST<string> test_bst;
+
+			TEST(test_bst.GetSize() == 0);
+
+			string test1 = "hello";
+			test_bst.Insert(test1);
+
+			string test2 = "goodbye";
+			test_bst.Insert(test2);
+
+			string test3 = "testing";
+			test_bst.Insert(test3);
+
+			string test4 = "question";
+			test_bst.Insert(test4);
+
+			string test5 = "fourth";
+			test_bst.Insert(test5);
+
+			string test6 = "next";
+			test_bst.Insert(test6);
+
+
+			TEST(test_bst.Find(test1));
+			TEST(test_bst.Find(test2));
+			TEST(test_bst.Find(test3));
+			TEST(test_bst.Find(test4));
+			TEST(test_bst.Find(test5));
+			TEST(test_bst.Find(test6));
+
+			//Test size after addition of 6 distinct elements
+			TEST(test_bst.GetSize() == 6);
+
+			//Add a duplicate value
+			string test7 = "next";
+			test_bst.Insert(test7);
+
+			//Size should still be 6.
+			TEST(test_bst.GetSize() == 6);
+
+			LinkedList<string> * ll = test_bst.GetList();
+
+			cout << "linked list size is " << ll->GetSize() << endl;
+			cout << "first element is " << ll->Get(0) << endl;
+
+			delete ll;
+
+
+			return success;
+		}
+
+	private:
+		BSTNode<T> * root;
+		int size;
+
+		//NEED TO FIX THIS TO WORK.
+		BSTNode<T> * InsertRecursive(T & valToInsert, BSTNode<T> * n)
+		{
+			/*
+				If the sent value is less than the current node's left value,
+				keep traversing. If left node does not exist, add it to the tree
+			*/
+			if(valToInsert < *n->value)
+			{
+				//If there is no value to the left, then make a new node a slap it there.
+				if(n->left == NULL)
+				{
+					n->left = new BSTNode<T>(&valToInsert);
+					size++;
+					return n->left;
+				}
+				//If there IS a node to the left, take that node and keep going down the path.
+				return InsertRecursive(valToInsert, n->left);
+			}
+			else if(valToInsert > *n->value)
+			{
+				if(n->right==NULL)
+				{
+					n->right = new BSTNode<T>(&valToInsert);
+					size++;
+					return n->right;
+				}
+				return InsertRecursive(valToInsert, n->right);
+			}
+			//Couldn't add the specified value because it was already in the tree.
+			else
+				return NULL;
+		}
+
+
+		BSTNode<T> * CopyRecursive(BSTNode<T> * node_to_recurse)
+		{
+			if(node_to_recurse != NULL)
+			{
+				BSTNode<T> * temp = new BSTNode<T>(node_to_recurse->GetValue());
+				temp->left = CopyRecursive(node_to_recurse->GetLeft());
+				temp->right = CopyRecursive(node_to_recurse->GetRight());
+				return temp;
+			}
+			else
+			{
+				return NULL;
+			}
+		}
+};
+
+
+#endif /* CS240_BST_H_ */

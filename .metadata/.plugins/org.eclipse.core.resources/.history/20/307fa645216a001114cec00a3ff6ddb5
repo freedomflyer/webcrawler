@@ -1,0 +1,67 @@
+#include <iostream>
+#include "WebCrawler.h"
+#include "Word.h"
+#include "WordList.h"
+#include "Page.h"
+using namespace std;
+
+//This method is the main driver behind the WebCrawler, and takes
+//<start-url> <output-file> <stopword-file>
+int main(int argc, char *argv[])
+{
+	/*BST<Word> * words = new BST<Word>();
+
+	Word w1 ("hello");
+	Word *w2 = new Word("hello1");
+	Word *w3 = new Word("hello2");
+	Word *w4 = new Word("hello3");
+	Word *w5 = new Word("hello4");
+	Word *w6 = new Word("hello5");
+
+	words->Insert(w1);
+	words->Insert(*w2);
+	words->Insert(*w3);
+	words->Insert(*w4);
+	words->Insert(*w5);
+	words->Insert(*w6);
+
+	delete words;
+	delete w2;
+	delete w3;
+	delete w4;
+	delete w5;
+	delete w6;*/
+
+	BST<Page> * PageHistory = new BST<Page>();
+
+	Page * p1 = new Page(URL("Hi"));
+	Page * p2 = new Page(URL("hrllo"));
+	Page * p3 = new Page(URL("Hi"));
+	Page * p4 = new Page(URL("Hi"));
+	Page * p5 = new Page(URL("Hi"));
+
+	PageHistory->Insert(*p1);
+	PageHistory->Insert(*p2);
+	PageHistory->Insert(*p3);
+	PageHistory->Insert(*p4);
+	PageHistory->Insert(*p5);
+
+	delete PageHistory;
+	delete p1;
+	delete p2;
+	delete p3;
+	delete p4;
+	delete p5;
+
+
+	/*if(argc == 4)
+	{
+		WebCrawler Crawler(argv[1]);
+		Crawler.crawl();
+		Crawler.printOutput(argv[2], argv[3]);
+	}
+	else
+		cout << "USAGE: <start-url> <output-file> <stopword-file>" << endl;*/
+
+	return 0;
+}

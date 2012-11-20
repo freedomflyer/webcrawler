@@ -1,0 +1,34 @@
+#ifndef WEBCRAWLER_H_
+#define WEBCRAWLER_H_
+#include <string>
+#include "HTMLParser.h"
+#include "URLQueue.h"
+#include "HTMLTokenizer.h"
+#include "LinkedList.h"
+#include "BST.h"
+#include "StopWords.h"
+#include "URL.h"
+#include "Page.h"
+#include "WordList.h"
+#include "XMLGenerator.h"
+
+using namespace std;
+
+class WebCrawler
+{
+	public:
+		~WebCrawler();
+		WebCrawler(string _startURL);
+		URL * getStartURL();
+		void printOutput(string _outputFile, string _stopWordFile);
+		void crawl();
+		BST<Page> * getPageHistory();
+
+	private:
+		URL startURL;
+		BST<Page> PageHistory;
+		WordList MasterWordList;
+};
+
+#endif /* WEBCRAWLER_H_ */
+

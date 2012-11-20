@@ -1,0 +1,26 @@
+#ifndef WORDLIST_H_
+#define WORDLIST_H_
+
+#include <string>
+#include "Word.h"
+#include "URL.h"
+#include "BST.h"
+
+
+using namespace std;
+
+class WordList
+{
+	public:
+		WordList();
+		void addWord(string & _theWord, URL & _theURL);
+		BST<Word> * getWords();
+		int getSize();
+
+		static bool Test(ostream & os);
+
+	private:
+		BST<Word> * words;
+};
+
+#endif /* WORDLIST_H_ */

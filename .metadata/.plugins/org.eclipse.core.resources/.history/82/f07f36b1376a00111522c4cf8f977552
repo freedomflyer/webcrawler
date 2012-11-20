@@ -1,0 +1,74 @@
+#include "Word.h"
+
+//Used to make a full on...word!
+Word::Word(string _word, URL _theURL):value(_word)
+{
+	Occurences = new BST<Occurence>();
+
+	Occurence * o = new Occurence(_theURL.getURL());
+	Occurences->Insert(*o);
+}
+
+//Used to construct a dummy word object.
+Word::Word(string _word):value(_word)
+{
+}
+
+Word::~Word()
+{
+	//delete Occurences;
+}
+
+string Word::getValue()
+{
+	return value;
+}
+
+Word& Word::operator= (Word & other)
+{
+	if(this != &other)
+	{
+		//The word being stored
+		value = other.value;
+
+		//A set of occurences of each distinct page that this word appears on.
+		Occurences = other.Occurences;
+	}
+	return *this;
+}
+
+bool Word::operator== (Word other) const
+{
+	return(value == other.value);
+}
+
+bool Word::operator< (Word other) const
+{
+	return(value < other.value);
+}
+
+bool Word::operator> (Word other) const
+{
+	return(value > other.value);
+}
+
+
+BST<Occurence> * Word::getOccurences()
+{
+	return Occurences;
+}
+
+void Word::addOccurence(URL & _theURL)
+{
+	Occurence tempOccurence(_theURL);
+	if(Occurences->Find(tempOccurence) ==  NULL)
+	{
+		Occurence * o = new Occurence(_theURL.getURL());
+		Occurences->Insert(*o);
+	}
+	else
+	{
+		Occurence * theOccurence = Occurences->Find(tempOccurence)->GetValue();
+		theOccurence->incrementOccurenceCount();
+	}
+}

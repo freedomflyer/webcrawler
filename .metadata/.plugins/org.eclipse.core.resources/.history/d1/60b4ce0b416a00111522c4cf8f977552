@@ -1,0 +1,28 @@
+#ifndef XMLGENERATOR_H_
+#define XMLGENERATOR_H_
+#include <string>
+#include "WordList.h"
+#include "BST.h"
+
+using namespace std;
+
+//This class will be used to generate an XML document to the specified file.
+class XMLGenerator
+{
+	//Default Constructor
+	public:
+		//Constructor.
+		~XMLGenerator();
+		XMLGenerator(string _startURL, WordList * _MasterWordList, BST<Page> * _PageHistory, string _outputFile, string _stopWordFile);
+		void printFile();
+
+	private:
+		string startURL;
+		WordList * MasterWordList;
+		BST<Page> * PageHistory;
+		string outputFile;
+		string stopWordFile;
+};
+
+#endif  /* XMLGENERATOR_H_ */
+

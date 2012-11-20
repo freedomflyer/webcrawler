@@ -1,0 +1,198 @@
+#include "HTMLParser.h"
+
+using namespace std;
+
+	HTMLParser::HTMLParser(WordList &_WordList, URLQueue & _PQ):
+			MasterWordList(_WordList), MasterURLQueue(_PQ), urlToParse(""),
+				inHTML(false),inHead(false),inBody(false),inTitle(false),
+					inH(false),inScript(false), title(""), possibleDescription("")
+	{
+	}
+
+	//Take a pointer to the word list, stopwords, and pagequeue
+	//return a new page object
+	Page * HTMLParser::Parse(URL _urlToParse)
+	{
+
+		try
+		{
+			urlToParse = _urlToParse;
+
+			//This page will be added to the page history
+			Page * pageToReturn = new Page(urlToParse);
+			URLInputStream stream(urlToParse.getURL());
+			HTMLTokenizer Tokenizer(&stream);
+			StringURLResolver Resolver;
+
+			while(Tokenizer.HasNextToken())
+			{
+				HTMLToken current_tok = Tokenizer.GetNextToken();
+
+				if(current_tok.GetType() == COMMENT)
+					continue;
+
+				//Marks flags for when we see an opening tag.
+				if(current_tok.GetType() == TAG_START)
+				{
+					string tag_value = current_tok.GetValue();
+					StringUtil::ToLower(tag_value);
+
+					if(tag_value == "html") inHTML = true;
+					if(tag_value == "head")	inHead = true;
+					if(tag_value == "title")inTitle = true;
+					if(tag_value == "body")	inBody = true;
+					if(tag_value == "script") inScript = true;
+
+					//Extract, resolve, and add links.
+					if(tag_value == "a")
+					{
+						cout << "Parsing an a tag with HREF=" << current_tok.GetAttribute("HREF") << endl;
+						string url = current_tok.GetAttribute("HREF");
+						URL urlToAdd(url);
+
+						if(boost::starts_with(url, "http://") || boost::starts_with(url, "file:///"))
+							MasterURLQueue.enqueue(urlToAdd);
+						else
+						{
+							cout << "Resolving URL..." << Resolver.resolveURL(_urlToParse, urlToAdd).getURL() << endl;
+
+							MasterURLQueue.enqueue(Resolver.resolveURL(_urlToParse, urlToAdd));
+						}
+					}
+					if(tag_value[0] == 'h' && isdigit(tag_value[1]))
+						inH = true;
+				}
+
+				//Marks flags for when we see the closing tag.
+				if(current_tok.GetType() == TAG_END)
+				{
+					string tag_value = current_tok.GetValue();
+					StringUtil::ToLower(tag_value);
+
+					if(tag_value == "html")	inHTML = false;
+					if(tag_value == "head") inHead = false;
+					if(tag_value == "title") inTitle = false;
+					if(tag_value == "body") inBody = false;
+					if(tag_value == "script") inScript = false;
+					if(tag_value[0] == 'h' && isdigit(tag_value[1]))
+						inH = false;
+				}
+
+				//If it's text, send it off for processing
+				if(current_tok.GetType() == TEXT)
+					processBlockOfText(current_tok.GetValue(), pageToReturn);
+			}
+			//BEFORE RETURNING THE PAGE, MAKE SURE IT HAS 100 character TITLE
+			//100 characters of NON WHITESPACE. However, include spaces in the description.
+			//Tags are omitted. Do not make spaces for each tag.
+			if(!pageToReturn->hasDescription())
+				pageToReturn->SetDescription(possibleDescription);
+			return pageToReturn;
+		}
+		catch (CS240Exception & e)
+		{
+			cout << e.GetMessage() << endl;
+		}
+		return NULL;
+	}
+
+	//Add to the titles, if applicable. Otherwise, check to make
+	//sure we're in body or title, but not in script
+	void HTMLParser::processBlockOfText(string _text, Page * pageToReturn)
+	{
+		if(!pageToReturn->hasDescription())
+		{
+			if(inTitle)
+			{
+				pageToReturn->SetDescription(_text);
+				cout << "IN TITLE!" << endl;
+			}
+			if(inH)
+			{
+				pageToReturn->SetDescription(_text);
+				cout << "IN AN H!" << endl;
+			}
+		}
+
+		if(inBody || inTitle)
+			if(!inScript)
+				cleanAndAddText(_text);
+	}
+
+	void HTMLParser::BuildPossibleDescription(string _text)
+	{
+		//Work here in possible description
+		//100 characters of NON WHITESPACE. However, include spaces in the description.
+		//Tags are omitted. Do not make spaces for each tag.
+		int size = 0;
+		int size_buffer = 0;
+		for(int i=0; i<possibleDescription.size(); i++)
+			if(!isspace(possibleDescription[i]))
+				size++;
+
+		int numCharsToAdd = 100 - size;
+
+		if(size <= 100 && numCharsToAdd > 0)
+		{
+			for(int i=0; i<_text.size(); i++)
+			{
+				if(numCharsToAdd > 0)
+				{
+					possibleDescription += _text[i];
+					numCharsToAdd--;
+				}
+			}
+		}
+	}
+
+	void HTMLParser::cleanAndAddText(string _text)
+	{
+		stringstream ss (stringstream::in | stringstream::out);
+		string word;
+
+		//Send _text over to the possible description building
+		BuildPossibleDescription(_text);
+
+		//If anything in the text is not alphanumeric, make a space at that point.
+		//Convert also to lowercase
+		for(int i=0; i<_text.length(); i++)
+		{
+			if(!isalnum(_text[i]))
+				_text[i] = ' ';
+			_text[i] = tolower(_text[i]);
+		}
+		ss << _text;
+
+		//Initilaize word to the first value from ss. Then keep adding til stop.
+		ss >> word;
+		while(ss)
+		{
+			if(isalpha(word[0]))
+				MasterWordList.addWord(word, urlToParse);
+			ss >> word;
+		}
+	}
+
+	bool HTMLParser::Test(ostream &os)
+	{
+		cout << "---------------TESTING HTMLPARSER.cpp-----------------" << endl;
+
+	/*	URLQueue * myPageQueue = new URLQueue();
+
+		WordList * myWordList = new WordList();
+
+		//Build the parser
+		HTMLParser * parser = new HTMLParser(*myWordList, *myPageQueue);
+
+		string testUrl = "http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/title.html";
+		URL * urlToTest = new URL(testUrl);
+		Page * returned_page = parser->Parse(*urlToTest);
+
+		cout << returned_page->GetDescription() << endl;
+
+		cout << myPageQueue->getSize() << endl;
+
+		cout << myWordList->getSize() << endl;*/
+
+		return true;
+	}

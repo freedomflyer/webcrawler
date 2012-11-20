@@ -1,0 +1,96 @@
+#include <iostream>
+#include <fstream>
+#include "XMLGenerator.h"
+#include "StopWords.h"
+
+using namespace std;
+
+//This method will generate the output XML.
+XMLGenerator::XMLGenerator(string _startURL, WordList & _MasterWordList, BST<Page> * _PageHistory, string _outputFile, string _stopWordFile):
+		startURL(_startURL), MasterWordList(_MasterWordList), PageHistory(_PageHistory), outputFile(_outputFile), stopWordFile(_stopWordFile)
+{
+
+
+}
+
+XMLGenerator::~XMLGenerator()
+{
+	cout << "________________XMLGENERATOR DESTRUCTOR______________" << endl;
+	//delete MasterWordList;
+	//delete PageHistory;
+}
+
+void XMLGenerator::printFile()
+{
+	StopWords stopwords(stopWordFile);
+
+	cout << "Printing!" << endl;
+	ofstream output(outputFile.c_str());
+
+	output << "<website>" << endl;
+
+		output << "<start-url>" << endl;
+			output << startURL << endl;
+		output << "</start-url>" << endl;
+
+		output << "<pages>" << endl;
+		LinkedList<Page> * pages = PageHistory->GetList();
+		while(pages->GetSize() > 0)
+		{
+			LLNode<Page> * tempNode = pages->GetFirst();
+			output << "<page>" << endl;
+				output << "<url>";
+					output << tempNode->GetValueNonConst().getURL().getURL();
+				output << "</url>" << endl;
+				output << "<description>";
+					output << tempNode->GetValueNonConst().GetDescription();
+				output << "</description>"  << endl;
+			output << "</page>" << endl;;
+			pages->Remove(tempNode);
+		}
+		output << "</pages>" << endl;
+		delete pages;
+
+		//Print out all words found, besides stopwords.
+		output << "<index>" << endl;
+
+		cout << MasterWordList.getSize() << endl;
+		LinkedList<Word> * words = MasterWordList.getWords()->GetList();
+		while(words->GetSize() > 0)
+		{
+			cout << "hello" << endl;
+			LLNode<Word> * tempWord = words->GetFirst();
+
+			//Check to make sure stopwords are not included in the output file.
+			if(!stopwords.IsStopWord(tempWord->GetValueNonConst().getValue()))
+			{
+				//Print out valid XML.
+				output << "<word>" << endl;
+					output << "<value>";
+						output << tempWord->GetValueNonConst().getValue();
+					output << "</value>" << endl;
+
+					LinkedList<Occurence> * occurences = tempWord->GetValueNonConst().getOccurences()->GetList();
+					while(occurences->GetSize() > 0)
+					{
+						LLNode<Occurence> * tempOccurrence = occurences->GetFirst();
+						output << "<occurrence>" << endl;;
+							output << "<url>";
+								output << tempOccurrence->GetValueNonConst().getURL().getURL();
+							output << "</url>" << endl;
+
+							output << "<count>";
+								output << tempOccurrence->GetValueNonConst().getOccurenceCount();
+							output << "</count>" << endl;;
+						output << "</occurrence>" << endl;
+						occurences->Remove(tempOccurrence);
+					}
+					delete occurences;
+				output << "</word>" << endl;
+			}
+			words->Remove(tempWord);
+		}
+		delete words;
+		output << "</index>" << endl;
+		output << "</website>" << endl;
+}

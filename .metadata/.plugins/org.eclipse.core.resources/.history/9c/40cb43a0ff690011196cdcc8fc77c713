@@ -1,0 +1,57 @@
+#include "WebCrawler.h"
+
+//Constructor. Initializes startURL, outputFile, and stopWordFile.
+WebCrawler::WebCrawler(string _startURL)
+{
+	startURL = new URL(_startURL);
+	MasterWordList = new WordList();
+}
+
+WebCrawler::~WebCrawler()
+{
+	cout << "________________WEBCRAWLER DESTRUCTOR______________" << endl;
+	delete startURL;
+	delete MasterWordList;
+	delete PageHistory;
+}
+
+//This is the main driver method of the program. It will take user input,
+//crawl a URL within it's scope, and output XML to a user-specified file.
+void WebCrawler::crawl()
+{
+	//Build URLQueue
+	PageHistory = new BST<Page>();
+
+	//Creates a new URLQueue on the stack, and initializes it's first URL as the startURL
+	URLQueue MasterURLQueue(startURL, PageHistory);
+
+	while(!MasterURLQueue.isEmpty())
+	{
+		URL urlToParse = MasterURLQueue.dequeue();
+		Page tempPage(urlToParse);
+
+		if(PageHistory->Find(tempPage) == NULL)
+		{
+			HTMLParser parser(*MasterWordList, MasterURLQueue);
+			Page * returnedPage = parser.Parse(urlToParse);
+			if(returnedPage != NULL)
+				PageHistory->Insert(*returnedPage);
+		}
+	}
+}
+
+URL* WebCrawler::getStartURL()
+{
+	return startURL;
+}
+
+void WebCrawler::printOutput(string _outputFile, string _stopWordFile)
+{
+	XMLGenerator xmlGen(getStartURL()->getURL(), MasterWordList, PageHistory, _outputFile, _stopWordFile);
+	xmlGen.printFile();
+}
+
+BST<Page> * WebCrawler::getPageHistory()
+{
+	return PageHistory;
+}

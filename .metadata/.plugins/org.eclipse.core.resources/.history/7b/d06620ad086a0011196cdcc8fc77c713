@@ -1,0 +1,45 @@
+#include "WordList.h"
+
+WordList::WordList()
+{
+	words = new BST<Word>();
+}
+
+WordList::~WordList()
+{
+	//delete words;
+}
+
+void WordList::addWord(string & _theWord, URL & _theURL)
+{
+	Word tempWord(_theWord);
+	if(words->Find(tempWord) == NULL)
+	{
+		Word * newWord = new Word(_theWord, _theURL);
+		words->Insert(*newWord);
+	}
+	else
+	{
+		Word * wordToEdit = words->Find(tempWord)->GetValue();
+
+		wordToEdit->addOccurence(_theURL);
+	}
+}
+
+BST<Word> * WordList::getWords()
+{
+	return words;
+}
+
+int WordList::getSize()
+{
+	return words->GetSize();
+}
+
+bool Test(ostream & os)
+{
+
+}
+
+
+

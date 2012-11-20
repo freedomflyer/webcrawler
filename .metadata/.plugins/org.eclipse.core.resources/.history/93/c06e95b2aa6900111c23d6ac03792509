@@ -1,0 +1,139 @@
+#include <URLQueue.h>
+#include <URL.h>
+
+using namespace std;
+
+URLQueue::URLQueue(URL * _startURL, BST<Page> * _PageHistory):PageHistory(_PageHistory)
+{
+	urlList = new LinkedList<URL>();
+	scope = generateScope(_startURL->getURL());
+	urlList->Insert(*_startURL, NULL);
+}
+
+bool URLQueue::enqueue(URL _url)
+{
+	Page tempPage(_url);
+
+	cout << "SCOPE IS " << scope << endl;
+	if(isInScope(_url) && isHTML(_url) && PageHistory->Find(tempPage) == NULL)
+	{
+		cout << "Enqueueing URL=" << _url.getURL() << endl;
+		urlList->Insert(_url, NULL);
+		return true;
+	}
+	else
+		cout << "PAGE=" << _url.getURL() << "NOT ADDED. OCCURRED IN SCOPE, HTML, AND HISTORY CHECK" << endl;;
+	return false;
+}
+
+bool URLQueue::isHTML(URL _url)
+{
+	int lastSlashPos = _url.getURL().rfind("/");
+	string urlToCheck = _url.getURL();
+
+	urlToCheck = urlToCheck.erase(0, lastSlashPos);
+
+	if(urlToCheck[urlToCheck.length() - 1] == '/')
+		return true;
+	if(urlToCheck[urlToCheck.length() - 1] != '/' && urlToCheck.find(".") == string::npos)
+		return true;
+	if(urlToCheck.find(".") >= 0)
+	{
+		cout << urlToCheck << endl;
+		int periodPos = urlToCheck.find(".");
+		urlToCheck = urlToCheck.erase(0, periodPos);
+
+		if(urlToCheck == ".htm" || urlToCheck == ".html" || urlToCheck == ".htm" || urlToCheck == ".shtml" || urlToCheck == ".cgi" || urlToCheck == ".jsp" || urlToCheck == ".asp" || urlToCheck == ".aspx" || urlToCheck == ".php" || urlToCheck == ".pl" || urlToCheck == ".cfm")
+			return true;
+	}
+	return false;
+}
+
+string URLQueue::generateScope(string _startURL)
+{
+	int lastSlashPos = _startURL.rfind("/");
+	return _startURL.erase(lastSlashPos+1, _startURL.length());
+}
+
+bool URLQueue::isInScope(URL _incomingUrl)
+{
+	return boost::starts_with(_incomingUrl.getURL(), scope);
+}
+
+//Returns a page from the queue. If the queue is empty, return NULL. Otherwise,
+//return the last page.
+URL URLQueue::dequeue()
+{
+	//What should I do here?
+	LLNode<URL> * node = urlList->GetLast();
+	URL urlToReturn = node->GetValue();
+	urlList->Remove(node);
+
+	return urlToReturn;
+}
+
+bool URLQueue::isEmpty()
+{
+	return urlList->IsEmpty();
+}
+
+int URLQueue::getSize()
+{
+	return urlList->GetSize();
+}
+
+string URLQueue::getScope()
+{
+	return scope;
+}
+
+bool URLQueue::Test(ostream &os)
+{
+	bool success = false;
+
+	cout << "---------------TESTING URLQueue.cpp-----------------" << endl;
+
+	BST<Page> * pageHistory = new BST<Page>;
+	URL * startURL = new URL("http://www.google.com/cs240/index.html");
+
+	URLQueue uq(startURL,pageHistory);
+
+	os << "The Scope Is " << uq.getScope() << endl;
+	TEST(uq.getScope() == "http://www.google.com/cs240/");
+
+	TEST(!uq.isInScope(URL("http://www.google.com/")));
+	TEST(uq.isInScope(URL("http://www.google.com/cs240/hello/index.html")));
+	TEST(!uq.isInScope(URL("http://www.google.com/index.html")));
+
+	TEST(!uq.isInScope(URL("Http://cs-OnLine.Cs.byu.edu/cs240/")));
+
+	TEST(uq.isHTML(URL("http://www.google.com/test/index.html")));
+	TEST(uq.isHTML(URL("http://www.google.com/test/")));
+	TEST(uq.isHTML(URL("http://www.google.com/test")));
+
+	TEST(uq.isHTML(URL("http://www.espn.com/football/")));
+	TEST(uq.isHTML(URL("http://www.espn.com/football/scores")));
+	TEST(uq.isHTML(URL("http://www.espn.com/football/scores/index.html")));
+
+	TEST(!uq.isHTML(URL("http://www.espn.com/football/scores/index.xml")));
+	TEST(uq.isHTML(URL("http://www.espn.com/")));
+	TEST(!uq.isHTML(URL("http://www.espn.com/testing.AWL")));
+
+
+	//NEW QUEUE
+	BST<Page> * pageHistory2 = new BST<Page>;
+	URL * startURL2 = new URL("http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/testFour.htm");
+	URLQueue uq2(startURL2, pageHistory2);
+
+	TEST(uq2.isInScope(URL("http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/title.html")));
+	TEST(uq2.isHTML(URL("http://students.cs.byu.edu/~cs240ta/crawler_tests/crawler/title.html")));
+
+	delete pageHistory2;
+	delete pageHistory;
+	delete startURL;
+	delete startURL2;
+
+	return success;
+}
+
+

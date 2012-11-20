@@ -1,0 +1,38 @@
+#include "Page.h"
+#include "StringUtil.h"
+
+bool Page::operator== (const Page & other) const
+{
+	return (url == other.url);
+}
+
+bool Page::operator< (const Page & other) const
+{
+	return (url < other.url);
+}
+
+bool Page::operator> (const Page & other) const
+{
+	return (url > other.url);
+}
+
+URL Page::getURL()
+{
+	return url;
+}
+
+void Page::SetDescription(string _description)
+{
+	description = _description;
+	doesItHaveDescription = true;
+}
+
+string Page::GetDescription()
+{
+	return description;
+}
+
+bool Page::hasDescription()
+{
+	return doesItHaveDescription;
+}
